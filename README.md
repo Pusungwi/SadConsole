@@ -1,6 +1,7 @@
 ![SadConsole Logo](images/SadConsoleLogo.gif)
 
 [![Join us on Reddit](https://img.shields.io/badge/reddit-SadConsole-red.svg)](http://reddit.com/r/sadconsole)
+[![Join the chat at https://gitter.im/Thraka/SadConsole](https://badges.gitter.im/Thraka/SadConsole.svg)](https://gitter.im/Thraka/SadConsole?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![GitHub commits](https://img.shields.io/github/commits-since/Thraka/SadConsole/V2.svg?maxAge=2592000)]()
 
 
@@ -16,9 +17,6 @@ SadConsole is an MonoGame 3.5-based game library (using .NET 4.6) that provides 
 SadConsole targets Windows and Linux using MonoGame 3.5 or SFML.
 
 There is source code for a screen editor written in SadConsole. It's the most comprehensive project to date using SadConsole and is available at https://github.com/Thraka/SadConsoleEditor/  
-
->**NOTE**  
->The editor is not yet upgraded to SadConsole 3.0 and cannot be used with it.
 
 Some sample games are provided in the [SampleGames](https://github.com/Thraka/SadConsole/tree/master/SampleGames) folder and are now part of the Visual Studio solution file.
 

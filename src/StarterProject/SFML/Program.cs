@@ -39,6 +39,11 @@ namespace StarterProject
                 {
                     _characterWindow.Show(true);
                 }
+                else if (SadConsole.Engine.Keyboard.IsKeyReleased(SFML.Window.Keyboard.Key.F3))
+                {
+                    _characterWindow.Show(true);
+                    Engine.DefaultFont.ResizeGraphicsDeviceManager(Engine.Device, 120, 60, 0, 0);
+                }
             }
         }
 
@@ -55,8 +60,8 @@ namespace StarterProject
             // We'll instead use our demo consoles that show various features of SadConsole.
             SadConsole.Engine.ConsoleRenderStack
                 = new ConsoleList() {
-                                        new CustomConsoles.StretchedConsole(),
                                         new CustomConsoles.SplashScreen() { SplashCompleted = () => { MoveNextConsole(); } },
+                                        new CustomConsoles.StretchedConsole(),
                                         new CustomConsoles.StringParsingConsole(),
                                         new CustomConsoles.DOSConsole(),
                                         new CustomConsoles.ViewsAndSubViews(),

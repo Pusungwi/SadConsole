@@ -1,6 +1,50 @@
 ﻿>**NOTE**
 This change log was more relevant when I wasn't using GitHub. Now it only lists major releases and updates to NuGet. The source code iterates much faster and can be checked through the commit history.
 
+## 10/01/2016
+
+### Core
+- Minor bug fixes.
+
+### GameHelpers
+- Added a Zone type and a Scene type.
+
+## 09/26/2016
+
+### Core
+- AnimatedTextSurface now clears the frame from CreateFrame with the default foreground and background colors.
+
+### Controls
+- Fixed possible recursive bug with mouse handling that Core had but was also in the Window console type.
+- Refactored Control base class. Protected members modified.
+- Added Control.Bounds for calculating the space the control uses visually.
+
+## 09/11/2016
+
+### Core
+- Fixed possible recursive bug with mouse handling when calling ProcessMouse on console B while in ProcessMouse on console A.
+
+### Controls
+- Fixed released (previously captured) control not giving back Engine.ActiveConsole.
+- Scroll bar now hides slider position when IsEnabled = False.
+
+## 09/08/2016
+Versions are no longer the same across all libraries.
+
+### Core
+- Updated all serialization for base types.
+- TextSurfaceView now a proper type that doesn't inherit from TextSurface for its function.
+- Cursor supports using the ColoredString parser system.
+- Fixed RexPaint support.
+- Main game window centers after resizing.
+- Virtual cursor now support wrapping lines at the word level and linux line endings. 
+- Rewrote the initialization system. Cut out the MonoGame.Game object and wrapped it behind the scenes. Easier for new users.
+- Fixed various bugs in the AnimatedTextSurface.
+
+### GameHelpers
+- Reworked serialization.
+- GameObject now implements ITextSurfaceRendered, bypasses using the Animation for rendering and instead consumes the animation data.
+
 ## Version 3.1.0
 * Fixed bug with effects that are added more than once not knowing they already existed in the effects manager.
 

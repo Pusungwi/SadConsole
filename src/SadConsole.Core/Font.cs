@@ -79,12 +79,20 @@ namespace SadConsole
         /// </summary>
         public int SolidGlyphIndex { get { return solidGlyphIndex; } set { solidGlyphIndex = value; solidGlyphRect = GlyphIndexRects[value]; } }
 
+        /// <summary>
+        /// The rectangle associated with the <see cref="SolidGlyphIndex"/>.
+        /// </summary>
         public Rectangle SolidGlyphRectangle { get { return solidGlyphRect; } }
 
         /// <summary>
         /// A cached array of rectangles of individual glyphs.
         /// </summary>
         public Rectangle[] GlyphIndexRects { get; private set; }
+
+        /// <summary>
+        /// How many columns are in the this font.
+        /// </summary>
+        public int Columns { get; private set; }
 
         /// <summary>
         /// How many rows are in this font.
@@ -113,7 +121,7 @@ namespace SadConsole
         private void Initialize(FontMaster masterFont, FontSizes fontMultiple)
         {
             FontImage = masterFont.Image;
-            MaxGlyphIndex = masterFont.Rows * Engine.FontColumns - 1;
+            MaxGlyphIndex = masterFont.Rows * masterFont.Columns - 1;
 
             switch (fontMultiple)
             {
@@ -147,6 +155,7 @@ namespace SadConsole
             GlyphIndexRects = masterFont.GlyphIndexRects;
             SolidGlyphIndex = masterFont.SolidGlyphIndex;
             Rows = masterFont.Rows;
+            Columns = masterFont.Columns;
         }
 
         /// <summary>
@@ -160,21 +169,41 @@ namespace SadConsole
 #if SFML
         public void ResizeGraphicsDeviceManager(RenderWindow manager, int width, int height, int additionalWidth, int additionalHeight)
         {
+            int oldWidth = (int)manager.Size.X;
+            int oldHeight = (int)manager.Size.Y;
+
             manager.Size = new SFML.System.Vector2u((uint)((Size.X * width) + additionalWidth), (uint)((Size.Y * height) + additionalHeight));
             manager.SetView(new View(new FloatRect(0, 0, manager.Size.X, manager.Size.Y)));
             Engine.WindowWidth = (int)manager.Size.X;
             Engine.WindowHeight = (int)manager.Size.Y;
+
+            int diffWidth = (Engine.WindowWidth - oldWidth) / 2;
+            int diffHeight = (Engine.WindowHeight - oldHeight) / 2;
+
+            manager.Position = new Point(manager.Position.X - diffWidth, manager.Position.Y - diffHeight);
         }
 
 #elif MONOGAME
         public void ResizeGraphicsDeviceManager(GraphicsDeviceManager manager, int width, int height, int additionalWidth, int additionalHeight)
         {
+            int oldWidth = manager.PreferredBackBufferWidth;
+            int oldHeight = manager.PreferredBackBufferHeight;
+
             manager.PreferredBackBufferWidth = (Size.X * width) + additionalWidth;
             manager.PreferredBackBufferHeight = (Size.Y * height) + additionalHeight;
-            manager.ApplyChanges();
-
+            
             Engine.WindowWidth = manager.PreferredBackBufferWidth;
             Engine.WindowHeight = manager.PreferredBackBufferHeight;
+
+            int diffWidth = (Engine.WindowWidth - oldWidth) / 2;
+            int diffHeight = (Engine.WindowHeight - oldHeight) / 2;
+
+
+            if (Engine.MonoGameInstance != null)
+                Engine.MonoGameInstance.Window.Position = new Point(Engine.MonoGameInstance.Window.Position.X - diffWidth, Engine.MonoGameInstance.Window.Position.Y - diffHeight);
+
+            manager.ApplyChanges();
+
         }
 #endif
 
@@ -207,42 +236,54 @@ namespace SadConsole
     /// <summary>
     /// The font stored by the engine. Used to generate the <see cref="Font"/> type used by the engine.
     /// </summary>
+    [DataContract]
     public class FontMaster
     {
         /// <summary>
         /// The name of this font family.
         /// </summary>
+        [DataMember]
         public string Name { get; set; }
 
         /// <summary>
         /// Where this font was loaded from.
         /// </summary>
+        [DataMember]
         public string FilePath { get; set; }
 
         /// <summary>
         /// The height of each glyph in pixels.
         /// </summary>
+        [DataMember]
         public int GlyphHeight { get; set; }
 
         /// <summary>
         /// The width of each glyph in pixels.
         /// </summary>
+        [DataMember]
         public int GlyphWidth { get; set; }
 
         /// <summary>
         /// The amount of pixels between glyphs.
         /// </summary>
+        [DataMember]
         public int GlyphPadding { get; set; }
 
         /// <summary>
         /// Which glyph index is considered completely solid. Used for shading.
         /// </summary>
+        [DataMember]
         public int SolidGlyphIndex { get; set; } = 219;
+
+        /// <summary>
+        /// The amount of columns the font uses, defaults to 16.
+        /// </summary>
+        [DataMember]
+        public int Columns { get; set; } = 16;
 
         /// <summary>
         /// The total rows in the font.
         /// </summary>
-        [IgnoreDataMember]
 #if SFML
         public int Rows { get { return (int)Image.Size.Y / (GlyphHeight + GlyphPadding); } }
 #elif MONOGAME
@@ -251,14 +292,31 @@ namespace SadConsole
         /// <summary>
         /// The texture used by the font.
         /// </summary>
-        [IgnoreDataMember]
         public Texture2D Image { get; private set; }
 
         /// <summary>
         /// A cached array of rectangles of individual glyphs.
         /// </summary>
-        [IgnoreDataMember]
         public Rectangle[] GlyphIndexRects;
+
+        /// <summary>
+        /// Creates a SadConsole font using an existing image.
+        /// </summary>
+        /// <param name="fontImage">The image for the font.</param>
+        /// <param name="glyphWidth">The width of each glyph.</param>
+        /// <param name="glyphHeight">The height of each glyph.</param>
+        /// <param name="totalColumns">Glyph columns in the font texture, defaults to 16.</param>
+        /// <param name="glyphPadding">Pixels between each glyph, defaults to 0.</param>
+        public FontMaster(Texture2D fontImage, int glyphWidth, int glyphHeight, int totalColumns = 16, int glyphPadding = 0)
+        {
+            Image = fontImage;
+            GlyphWidth = glyphWidth;
+            GlyphHeight = glyphHeight;
+            Columns = totalColumns;
+            GlyphPadding = glyphPadding;
+
+            ConfigureRects();
+        }
 
 #region Methods
         /// <summary>
@@ -280,12 +338,12 @@ namespace SadConsole
         /// </summary>
         public void ConfigureRects()
         {
-            GlyphIndexRects = new Rectangle[Rows * Engine.FontColumns];
+            GlyphIndexRects = new Rectangle[Rows * Columns];
 
             for (int i = 0; i < GlyphIndexRects.Length; i++)
             {
-                var cx = i % Engine.FontColumns;
-                var cy = i / Engine.FontColumns;
+                var cx = i % Columns;
+                var cy = i / Columns;
 
                 if (GlyphPadding != 0)
                     GlyphIndexRects[i] = new Rectangle((cx * GlyphWidth) + ((cx + 1) * GlyphPadding),
@@ -327,6 +385,9 @@ namespace SadConsole
         [OnDeserialized]
         private void AfterDeserialized(System.Runtime.Serialization.StreamingContext context)
         {
+            if (Columns == 0)
+                Columns = 16;
+
             Generate();
         }
 #endregion

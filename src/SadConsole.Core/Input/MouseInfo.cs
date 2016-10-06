@@ -187,10 +187,20 @@ namespace SadConsole.Input
                     if (Engine.LastMouseConsole != null)
                     {
                         var info = this.Clone();
-                        Engine.LastMouseConsole.ProcessMouse(info);
-                    }
+                        var oldConsole = Engine.LastMouseConsole;
+                        Engine.LastMouseConsole = data;
 
-                    Engine.LastMouseConsole = data;
+                        if (oldConsole is Console)
+                        {
+                            ((Console)oldConsole).SkipMouseDataFill = true;
+                            oldConsole.ProcessMouse(info);
+                            ((Console)oldConsole).SkipMouseDataFill = false;
+                        }
+                        else
+                            oldConsole.ProcessMouse(info);
+                    }
+                    else
+                        Engine.LastMouseConsole = data;
                 }
             }
         }
